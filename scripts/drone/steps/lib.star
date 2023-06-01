@@ -775,8 +775,28 @@ def lint_frontend_step():
         "commands": [
             "yarn run prettier:check",
             "yarn run lint",
-            "yarn run i18n:compile",  # TODO: right place for this?
             "yarn run typecheck",
+        ],
+    }
+
+def verify_i18n_step():
+    return {
+        "name": "verify-i18n",
+        "image": build_image,
+        "depends_on": [
+            "yarn-install",
+        ],
+        "commands": [
+            "yarn run i18n:extract",
+            # Verify that translation extraction has been committed
+            '''
+            file_diff=$(git diff --stat)
+            if [ -n "$file_diff" ]; then
+                echo "Translation extraction has not been committed. Please commit the changes and push again."
+                exit 1
+            fi
+            ''',
+            "yarn run i18n:compile",
         ],
     }
 
